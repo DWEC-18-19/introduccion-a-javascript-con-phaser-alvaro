@@ -8,20 +8,43 @@ var cursors;
 var jumpButton;
 var text;
 var winningMessage;
+var lostMessage;
 var won = false;
+var lost = false;
 var currentScore = 0;
+var currentLife = 2;
 var winningScore = 100;
 
 // add collectable items to the game
 function addItems() {
   items = game.add.physicsGroup();
-  createItem(375, 300, 'coin');
+  createItem(230, 500, 'coin');
+  createItem(580, 500, 'coin');
+  createItem(370, 380, 'coin');
+  createItem(510, 270, 'coin');
+  createItem(650, 220, 'coin');
+  createItem(100, 220, 'coin');
+  createItem(220, 170, 'coin');
+  createItem(570, 120, 'coin');
+  createItem(400, 80, 'poison');
+  createItem(370, 500,'poison');
+  createItem(125, 50,'star');
 }
 
 // add platforms to the game
 function addPlatforms() {
   platforms = game.add.physicsGroup();
-  platforms.create(450, 150, 'platform');
+  platforms.create(100, 550, 'platform1');
+  platforms.create(450, 550, 'platform1');
+  platforms.create(300, 430, 'platform2');
+  platforms.create(400, 320, 'platform2');
+  platforms.create(650, 270, 'platform1');
+  platforms.create(60, 270, 'platform1');
+  platforms.create(150, 220, 'platform1');
+  platforms.create(550, 170, 'platform2');
+  platforms.create(270, 130, 'platform1');
+  platforms.create(130, 90, 'platform2');
+
   platforms.setAll('body.immovable', true);
 }
 
@@ -43,8 +66,21 @@ function createBadge() {
 // when the player collects an item on the screen
 function itemHandler(player, item) {
   item.kill();
-  currentScore = currentScore + 10;
-  if (currentScore === winningScore) {
+  var objeto = item.key;
+
+  if(objeto == "coin"){
+    currentScore = currentScore + 10;
+  }else if(objeto == "poison"){
+    currentLife = currentLife - 1;
+    if(currentLife == 0){
+      lost = true;
+      setTimeout('document.location.reload()',1000);
+    }
+  }else{
+    currentScore = currentScore + 20;
+  }
+
+  if (currentScore === winningScore && currentLife > 0) {
       createBadge();
   }
 }
@@ -58,18 +94,21 @@ function badgeHandler(player, badge) {
 // setup game when the web page loads
 window.onload = function () {
   game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
-  
+
   // before the game begins
   function preload() {
-    game.stage.backgroundColor = '#5db1ad';
-    
+    game.stage.backgroundColor = '#DF0101';
+
     //Load images
-    game.load.image('platform', 'platform_1.png');
-    
+    game.load.image('platform1', 'platform_1.png');
+    game.load.image('platform2', 'platform_2.png');
+
     //Load spritesheets
-    game.load.spritesheet('player', 'chalkers.png', 48, 62);
+    game.load.spritesheet('player', 'mikethefrog.png', 32, 32);
     game.load.spritesheet('coin', 'coin.png', 36, 44);
     game.load.spritesheet('badge', 'badge.png', 42, 54);
+    game.load.spritesheet('poison', 'poison.png', 32, 32);
+    game.load.spritesheet('star', 'star.png', 32, 32);
   }
 
   // initial game set up
@@ -87,13 +126,17 @@ window.onload = function () {
     cursors = game.input.keyboard.createCursorKeys();
     jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     text = game.add.text(16, 16, "SCORE: " + currentScore, { font: "bold 24px Arial", fill: "white" });
+    textLives = game.add.text(616, 16, "LIVES: " + currentLife, { font: "bold 24px Arial", fill: "white" });
     winningMessage = game.add.text(game.world.centerX, 275, "", { font: "bold 48px Arial", fill: "white" });
     winningMessage.anchor.setTo(0.5, 1);
+    lostMessage = game.add.text(game.world.centerX, 275, "", { font: "bold 48px Arial", fill: "white" });
+    lostMessage.anchor.setTo(0.5, 1);
   }
 
   // while the game is running
   function update() {
     text.text = "SCORE: " + currentScore;
+    textLives.text = "Lives: " + currentLife;
     game.physics.arcade.collide(player, platforms);
     game.physics.arcade.overlap(player, items, itemHandler);
     game.physics.arcade.overlap(player, badges, badgeHandler);
@@ -115,13 +158,15 @@ window.onload = function () {
     else {
       player.animations.stop();
     }
-    
+
     if (jumpButton.isDown && (player.body.onFloor() || player.body.touching.down)) {
       player.body.velocity.y = -400;
     }
     // when the player winw the game
     if (won) {
       winningMessage.text = "YOU WIN!!!";
+    } else if (lost){
+      lostMessage.text = "YOU LOOSE!!!";
     }
   }
 
